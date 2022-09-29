@@ -55,6 +55,15 @@ function photo_TD_from_val(
     return val * temperature_correction(td_set, T)
 end
 
+function photo_TD_from_val_memory(
+    td_set::AbstractTDParameterSet{FT},
+    val::FT,
+    T_hist::Array{FT},
+    coeffs::Array{FT}
+) where {FT<:AbstractFloat}
+return sum(val .* [coeffs[i]*temperature_correction(td_set, T_hist[end-i]) for i=0:length(coeffs)-1])
+end
+
 
 
 
@@ -210,7 +219,15 @@ function leaf_vcmax!(
     return nothing
 end
 
+function leaf_vcmax_memory!(
+    td_set::AbstractTDParameterSet{FT},
+    leaf::Leaf{FT},
+    coeffs::Array{FT}
+) where {FT<:AbstractFloat}
+leaf.Vcmax = photo_TD_from_val_memory(td_set, leaf.Vcmax25, leaf.T_hist, coeffs);
 
+return nothing
+end
 
 
 """
@@ -290,9 +307,10 @@ function leaf_temperature_dependence!(
 ) where {FT<:AbstractFloat}
     if leaf.T_old != leaf.T
         leaf.T_old = leaf.T;
+        append!(leaf.T_hist, leaf.T)
         leaf.p_sat = saturation_vapor_pressure(leaf.T);
         leaf_rd!(photo_set.ReT, leaf);
-        leaf_vcmax!(photo_set.VcT, leaf);
+        leaf_vcmax_memory!(photo_set.VcT, leaf, photo_set.coeffs);
         leaf_jmax!(photo_set.JT , leaf);
         leaf_kc!(photo_set.KcT, leaf);
         leaf_ko!(photo_set.KoT, leaf);
@@ -313,9 +331,10 @@ function leaf_temperature_dependence!(
 ) where {FT<:AbstractFloat}
     if leaf.T_old != leaf.T
         leaf.T_old = leaf.T
+        append!(leaf.T_hist, leaf.T)
         leaf.p_sat = saturation_vapor_pressure(leaf.T);
         leaf_rd!(photo_set.ReT, leaf);
-        leaf_vcmax!(photo_set.VcT, leaf);
+        leaf_vcmax_memory!(photo_set.VcT, leaf, photo_set.coeffs);
         leaf_vpmax!(photo_set.VpT, leaf);
         leaf_kpep!(photo_set.KpT, leaf);
     end

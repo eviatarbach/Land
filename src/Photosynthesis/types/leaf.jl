@@ -15,6 +15,7 @@ Base.@kwdef mutable struct Leaf{FT<:AbstractFloat}
     # Temperature related
     "Temperature `[K]`"
     T::FT = 298.15
+    T_hist::Array{FT} = []
     "Old Temperature `[K]`, if not T, run leaf_temperature_dependence!"
     T_old::FT = 0
 
