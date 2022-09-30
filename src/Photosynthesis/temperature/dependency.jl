@@ -61,7 +61,7 @@ function photo_TD_from_val_memory(
     T_hist::Array{FT},
     coeffs::Array{FT}
 ) where {FT<:AbstractFloat}
-return sum(val .* [coeffs[i]*temperature_correction(td_set, T_hist[end-i]) for i=0:length(coeffs)-1])
+return sum(val .* [coeffs[i+1]*temperature_correction(td_set, T_hist[end-i]) for i=0:length(coeffs)-1])
 end
 
 
